@@ -28,7 +28,7 @@ class ApiClient(ApiClientInterface):
         prompt = Template(language_map[language]["complete"]).substitute(input=cue)
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": prompt,
@@ -55,7 +55,7 @@ class ApiClient(ApiClientInterface):
         prompt = Template(language_map[language]["answer"]).substitute(input=question)
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             'completions': 1,
@@ -71,13 +71,12 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/generate', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 out = "".join(text['data'][0]['text'])
                 answer = out.split(prompt)[-1].strip()
-                result = "Q: {} \nA: {}".format(question, answer)
-                return result
+                return f"Q: {question} \nA: {answer}"
 
     @try_catch_log
     async def song(self, song_name: Tuple[str], user_name: str, length: int, api_key: str, language: str = "EN",
@@ -87,7 +86,7 @@ class ApiClient(ApiClientInterface):
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": prompt,
@@ -101,12 +100,11 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/completions', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 text = text['choices'][0]['text']
-                out = prompt + text
-                return out
+                return prompt + text
 
     @try_catch_log
     async def headline(self, prompt: Tuple[str], length: int, api_key: str, language="EN", temperature=0.5) -> str:
@@ -115,7 +113,7 @@ class ApiClient(ApiClientInterface):
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": scaffold,
@@ -130,12 +128,11 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/completions', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 text = text['choices'][0]['text']
-                result = Template(language_map[language]["headline_out"]).substitute(input=text)
-                return result
+                return Template(language_map[language]["headline_out"]).substitute(input=text)
 
     @try_catch_log
     async def sentiment(self, prompt: Tuple[str], api_key: str, language="EN") -> str:
@@ -144,16 +141,15 @@ class ApiClient(ApiClientInterface):
                 "query": Template("$input.").substitute(input=prompt)}
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/search', headers=headers,
-                                    json=data) as r:
+                                            json=data) as r:
                 self.ensure_success(r.status)
                 results = await r.json()
                 results = results["data"]
-                sentiment = prep_sentiment(results)
-                return sentiment
+                return prep_sentiment(results)
 
     @try_catch_log
     async def emojify(self, prompt: Tuple[str], length: int, api_key: str, language="EN", temperature=0.5) -> str:
@@ -162,7 +158,7 @@ class ApiClient(ApiClientInterface):
 
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": scaffold,
@@ -179,12 +175,11 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/completions', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 text = text['choices'][0]['text']
-                result = Template("""$input: $input2""").substitute(input=topics, input2=text)
-                return result
+                return Template("""$input: $input2""").substitute(input=topics, input2=text)
 
     @try_catch_log
     async def sarcastic_answer(self, prompt: Tuple[str], length: int, api_key: str, language="EN",
@@ -193,7 +188,7 @@ class ApiClient(ApiClientInterface):
         scaffold = Template(language_map[language]["sarcasm"]).substitute(input=q)
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": scaffold,
@@ -210,12 +205,11 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/completions', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 text = text['choices'][0]['text']
-                out = "Q: {} \n A: {}".format(q, text)
-                return out
+                return f"Q: {q} \n A: {text}"
 
     @try_catch_log
     async def foulmouth_answer(self, prompt: Tuple[str], length: int, api_key: str, language="EN",
@@ -224,7 +218,7 @@ class ApiClient(ApiClientInterface):
         scaffold = Template(language_map[language]["foulmouth"]).substitute(input=q)
         headers = {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + api_key
+            'Authorization': f'Bearer {api_key}',
         }
         params = {
             "prompt": scaffold,
@@ -241,9 +235,8 @@ class ApiClient(ApiClientInterface):
         }
         async with aiohttp.ClientSession() as session:
             async with session.post('https://api.openai.com/v1/engines/davinci/completions', headers=headers,
-                                    json=params) as r:
+                                            json=params) as r:
                 self.ensure_success(r.status)
                 text = await r.json()
                 text = text['choices'][0]['text']
-                out = "Q: {} \n A: {}".format(q, text)
-                return out
+                return f"Q: {q} \n A: {text}"

@@ -23,10 +23,11 @@ if __name__ == "__main__":
     container.config.MONGO_HOST.from_env("MONGO_HOST", required=True)
     container.config.MONGO_PORT.from_env("MONGO_PORT", required=True)
     container.config.MONGO_DBNAME.from_env("MONGO_DBNAME", required=True)
-    container.config.MONGO_URI.from_dict({"MONGO_URI": "mongodb://{}:{}@{}:{}".format(container.config.MONGO_DBUSER,
-                                                                                      container.config.MONGO_DBPASS,
-                                                                                      container.config.MONGO_HOST,
-                                                                                      container.config.MONGO_PORT)})
+    container.config.MONGO_URI.from_dict(
+        {
+            "MONGO_URI": f"mongodb://{container.config.MONGO_DBUSER}:{container.config.MONGO_DBPASS}@{container.config.MONGO_HOST}:{container.config.MONGO_PORT}"
+        }
+    )
     container.wire(modules=[sys.modules[__name__]])
     main()
 

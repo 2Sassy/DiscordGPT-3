@@ -22,7 +22,9 @@ class LoggingHandler:
         self.log_folder = os.path.join(self.modules_directory, "logs/")
         if os.path.exists(self.log_folder) is False:
             os.mkdir(self.log_folder)
-        self.log_file = os.path.join(self.modules_directory, "logs/bot_{}.logs".format(str(current_process().ident)))
+        self.log_file = os.path.join(
+            self.modules_directory, f"logs/bot_{str(current_process().ident)}.logs"
+        )
 
     def get_console_handler(self):
         console_handler = logging.StreamHandler(sys.stdout)

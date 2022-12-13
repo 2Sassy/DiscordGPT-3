@@ -6,13 +6,13 @@ def prep_sentiment(results):
         raise ValueError("Expected three results from sentiment array.")
     values = [r["score"] for r in results]
     chosen_item_index = values.index(max(values))
-    values[chosen_item_index] = str(values[chosen_item_index]) + " ✅"
+    values[chosen_item_index] = f"{str(values[chosen_item_index])} ✅"
     positive, negative, neutral = values
-    sentiments = Template("""
+    return Template(
+        """
         Sentiment:
         Positive: $positive
         Negative: $negative
         Neutral: $neutral
-        """).substitute(positive=positive, negative=negative, neutral=neutral)
-
-    return sentiments
+        """
+    ).substitute(positive=positive, negative=negative, neutral=neutral)

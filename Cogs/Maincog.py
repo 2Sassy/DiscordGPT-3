@@ -36,8 +36,7 @@ class MainCog(commands.Cog):
 
         if hasattr(ctx.command, 'on_error'):
             return
-        cog = ctx.cog
-        if cog:
+        if cog := ctx.cog:
             if cog._get_overridden_method(cog.cog_command_error) is not None:
                 return
         ignored = (commands.CommandNotFound,)
@@ -108,12 +107,12 @@ class MainCog(commands.Cog):
     @staticmethod
     async def credit_warning(ctx):
         user_id, user_name = user_parse(ctx)
-        await ctx.send("{}, your daily allowance is over. :cry:".format(user_name))
+        await ctx.send(f"{user_name}, your daily allowance is over. :cry:")
 
     @staticmethod
     async def not_admin_warning(ctx):
         user_id, user_name = user_parse(ctx)
-        await ctx.send("{}, this command is only usable by admins.".format(user_name))
+        await ctx.send(f"{user_name}, this command is only usable by admins.")
 
     @commands.command()
     async def help(self, ctx):
@@ -124,7 +123,7 @@ class MainCog(commands.Cog):
     async def setup(self, ctx):
         user_id, user_name = user_parse(ctx)
         owned_servers = self.__db.find_owned_servers(user_id)
-        if not len(owned_servers) > 0:
+        if len(owned_servers) <= 0:
             await ctx.send("You don't seem to own any servers that i'm on. If you think this is a mistake, kick the "
                            "bot and add it again.")
             return
@@ -137,7 +136,7 @@ class MainCog(commands.Cog):
         if len(owned_servers) > 1:
             message = ""
             for serv in owned_servers:
-                message += "[" + str((owned_servers.index(serv) + 1)) + "]"
+                message += f"[{str(owned_servers.index(serv) + 1)}]"
                 message += "server name:" + serv["server_name"]
                 message += ", server id:" + serv["server_id"]
                 message += "\n"
@@ -177,7 +176,7 @@ class MainCog(commands.Cog):
             await ctx.send("Timeout has been reached. You can try again with !setup.")
             return
 
-        if not msg.content[0:3] == "sk-":
+        if msg.content[:3] != "sk-":
             await ctx.send("Your api token should start with the characters sk-. You can restart this process when "
                            "you find it.")
             return
@@ -199,11 +198,11 @@ class MainCog(commands.Cog):
         owner_id, vips, _, length, allowance = self.__db.get_server_settings(guild_id)
         if user_id != owner_id:
             raise NotAdminError
-        length_str = "# Length: {}\n".format(length)
-        allowance_str = "# Allowance: {}\n".format(allowance)
+        length_str = f"# Length: {length}\n"
+        allowance_str = f"# Allowance: {allowance}\n"
         vips_str = """# Vips\n"""
         for i in range(len(vips)):
-            vips_str += "{} - {}\n".format(i + 1, vips[i])
+            vips_str += f"{i + 1} - {vips[i]}\n"
         vips_str += "Note: Owners are automatically assigned a vip role."
         return await ctx.send(length_str + allowance_str + vips_str)
 
@@ -216,7 +215,7 @@ class MainCog(commands.Cog):
         if user_id != owner_id:
             raise NotAdminError
         self.__db.update_server_allowance(guild_id, allowance)
-        return await ctx.send("Successfully updated member allowance to {}".format(allowance))
+        return await ctx.send(f"Successfully updated member allowance to {allowance}")
 
     @commands.command()
     @commands.guild_only()
@@ -227,7 +226,7 @@ class MainCog(commands.Cog):
         if user_id != owner_id:
             raise NotAdminError
         self.__db.update_server_length(guild_id, length)
-        return await ctx.send("Successfully updated response length to {}".format(length))
+        return await ctx.send(f"Successfully updated response length to {length}")
 
     @commands.command()
     @commands.guild_only()
@@ -239,7 +238,7 @@ class MainCog(commands.Cog):
             raise NotAdminError
         member_id, member_name = member.id, member.display_name
         self.__db.add_vip(guild_id, member_id)
-        return await ctx.send("Successfully added {} to vips.".format(member_name))
+        return await ctx.send(f"Successfully added {member_name} to vips.")
 
     @commands.command()
     @commands.guild_only()
@@ -251,7 +250,7 @@ class MainCog(commands.Cog):
             raise NotAdminError
         member_id, member_name = member.id, member.display_name
         self.__db.remove_vip(guild_id, member_id)
-        return await ctx.send("Successfully removed {} from vips.".format(member_name))
+        return await ctx.send(f"Successfully removed {member_name} from vips.")
 
     @commands.command()
     @commands.guild_only()
@@ -260,7 +259,9 @@ class MainCog(commands.Cog):
         guild_id = ctx.guild.id
         today_usage, _, _ = self.__db.get_user_settings(guild_id, user_id)
         _, _, _, _, allowance = self.__db.get_server_settings(guild_id)
-        return await ctx.send("{}, your remaining daily allowance is: {}.".format(user_name, allowance - today_usage))
+        return await ctx.send(
+            f"{user_name}, your remaining daily allowance is: {allowance - today_usage}."
+        )
 
     @commands.command()
     @commands.guild_only()
@@ -269,7 +270,8 @@ class MainCog(commands.Cog):
         guild_id = ctx.guild.id
         _, language, temperature = self.__db.get_user_settings(guild_id, user_id)
         return await ctx.send(
-            "{}, your language is set to: {} and temperature is set to: {}".format(user_name, language, temperature))
+            f"{user_name}, your language is set to: {language} and temperature is set to: {temperature}"
+        )
 
     @commands.command()
     @commands.guild_only()
@@ -278,12 +280,14 @@ class MainCog(commands.Cog):
         guild_id = ctx.guild.id
         possible_languages = list(language_map.keys())
         if lang not in possible_languages:
-            return await ctx.send("{}, chosen language must be within: {}".format(user_name, possible_languages))
+            return await ctx.send(
+                f"{user_name}, chosen language must be within: {possible_languages}"
+            )
         today_usage, language, temperature = self.__db.get_user_settings(guild_id, user_id)
         self.__db.update_user_language(guild_id, user_id, lang)
         return await ctx.send(
-            "Sucessfully updated your settings, {}. Old language: {}, New language: {}".format(user_name, language,
-                                                                                               lang))
+            f"Sucessfully updated your settings, {user_name}. Old language: {language}, New language: {lang}"
+        )
 
     @commands.command()
     @commands.guild_only()
@@ -291,17 +295,14 @@ class MainCog(commands.Cog):
         user_id, user_name = user_parse(ctx)
         guild_id = ctx.guild.id
         if not 0 <= temp <= 1:
-            return await ctx.send("{}, chosen temperature must equal or be within the range of 0 and 1. (e.g. 0.3) "
-                                  "You can read more about temperature on "
-                                  "https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277 or "
-                                  "https://beta.openai.com/docs/api-reference/create-completion-via-get.".format(
-                user_name))
+            return await ctx.send(
+                f"{user_name}, chosen temperature must equal or be within the range of 0 and 1. (e.g. 0.3) You can read more about temperature on https://towardsdatascience.com/how-to-sample-from-language-models-682bceb97277 or https://beta.openai.com/docs/api-reference/create-completion-via-get."
+            )
         today_usage, language, temperature = self.__db.get_user_settings(guild_id, user_id)
         self.__db.update_user_temperature(guild_id, user_id, temp)
         return await ctx.send(
-            "Sucessfully updated your settings, {}. Old temperature: {}, New temperature: {}".format(user_name,
-                                                                                                     temperature,
-                                                                                                     temp))
+            f"Sucessfully updated your settings, {user_name}. Old temperature: {temperature}, New temperature: {temp}"
+        )
 
     @commands.command()
     @commands.guild_only()

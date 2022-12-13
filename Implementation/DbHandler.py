@@ -17,9 +17,7 @@ class DbHandler:
 
     def check_server_token(self, server_id):
         result = self.__servers.find_one({"server_id": server_id})
-        if result is None or result["api_token"] is None:
-            return False
-        return True
+        return result is not None and result["api_token"] is not None
 
     def find_server(self, server_id):
         return self.__servers.find_one({"server_id": server_id})
@@ -28,7 +26,7 @@ class DbHandler:
         try:
             self.__servers.insert_one(server)
         except Exception as e:
-            self.__logger.critical("Unable to add server: {}, e: {}".format(server, e))
+            self.__logger.critical(f"Unable to add server: {server}, e: {e}")
 
     def delete_server(self, server_id):
         return self.__servers.delete_one({"server_id": server_id})
@@ -72,12 +70,9 @@ class DbHandler:
         return user
 
     def get_user_settings(self, server_id, user_id):
-        today = datetime.today().strftime("%d-%m-%y")
+        today = datetime.now().strftime("%d-%m-%y")
         user = self.get_user(server_id, user_id)
-        if today in user["usage"].keys():
-            today_usage = user["usage"][today]
-        else:
-            today_usage = 0
+        today_usage = user["usage"][today] if today in user["usage"].keys() else 0
         language = user["settings"]["language"]
         temperature = user["settings"]["temperature"]
         return today_usage, language, temperature
@@ -92,19 +87,12 @@ class DbHandler:
         return self.__servers.update_one({"server_id": server_id}, {"$pull": {"vips": user_id}})
 
     def increment_member_usage(self, server_id, user_id, usage):
-        today = datetime.today().strftime("%d-%m-%y")
+        today = datetime.now().strftime("%d-%m-%y")
         return self.__servers.update_one(
-            {"server_id": server_id,
-             "users":
-                 {"$elemMatch":
-                     {
-                         "id": user_id
-                     }
-                 }
-             },
-            {"$inc":
-                 {"users.$.usage.{}".format(today): usage}
-             }, upsert=True)
+            {"server_id": server_id, "users": {"$elemMatch": {"id": user_id}}},
+            {"$inc": {f"users.$.usage.{today}": usage}},
+            upsert=True,
+        )
 
     def update_user_language(self, server_id, user_id, lang):
         return self.__servers.update_one(
